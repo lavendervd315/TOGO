@@ -15,23 +15,25 @@ struct HighVoltageInsulationView: View {
     var body: some View {
         VStack {
             if self.page == 1 {
-                HighVoltageInsulationFirstPageView(list: $list, tab: tab)
+                HighVoltageInsulationFirstPageView(list: $list, tab: tab).transition(.scale)
             } else {
-                HighVoltageInsulationSecondPageView()
+                HighVoltageInsulationSecondPageView().transition(.scale)
             }
             VStack {
                 HStack{
                     HStack{
                         if !(self.page == 1 && self.tab == 0) {
                             Button(action: {
-                                if page == 2 {
-                                    page = 1
-                                } else {
-                                    tab = tab - 1
-                                    page = 2
+                                withAnimation{
+                                    if page == 2 {
+                                        page = 1
+                                    } else {
+                                        tab = tab - 1
+                                        page = 2
+                                    }
                                 }
                             }) {
-                                NameBtn(name: "次へ")
+                                NameBtn(name: "前へ")
                             }
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
@@ -43,15 +45,17 @@ struct HighVoltageInsulationView: View {
                     HStack{
                         if !(self.page == 2 && self.tab == 7) {
                             Button(action: {
-                                if page == 2 {
-                                    tab = tab + 1
-                                    page = 1
-                                } else {
-                                    page = 2
+                                withAnimation{
+                                    if page == 2 {
+                                        tab = tab + 1
+                                        page = 1
+                                    } else {
+                                        page = 2
+                                    }
                                 }
                                 print(String(tab) + "--------" + String(page))
                             }) {
-                                NameBtn(name: "前へ")
+                                NameBtn(name: "次へ")
                             }
                         }
                     }.frame(maxWidth: .infinity, alignment: .trailing)
@@ -83,23 +87,30 @@ struct HighVoltageInsulationSecondPageView: View {
     }
 }
 
+enum ActiveSheet: Identifiable {
+    case first, second
+    var id: Int {
+        hashValue
+    }
+}
 struct HighVoltageInsulationFirstPageView: View {
     @EnvironmentObject var vo: ValidateObservale
     @State private var form = DataForm()
     @Binding public var list:[DataForm]
-    @State var isDialog = false
+    @State var activeSheet: ActiveSheet?
     @State var isAction = false
     @State var isSelectBox = false
     @State private var selected = SelectBoxData.One
     @State var isError = false
     @State var errorMessage = ""
     @State var tab:Int
-    @State private var users = ["Paul", "Taylor", "Adele"]
+    @State var selectedDR = "0"
+    @State var id = ""
     var body: some View {
         VStack(spacing: 10) {
             HStack {
                 Button(action: {
-                    self.isDialog = true
+                    self.activeSheet = .second
                     self.isAction = false
                     self.form = DataForm()
                 }) {
@@ -110,15 +121,42 @@ struct HighVoltageInsulationFirstPageView: View {
             ScrollView {
                 VStack (spacing: 10){
                     ForEach(list.indices, id: \.self) { index in
-                        HighVoltageInsulationRowDataView(form: list[index], delete: {self.callbackDelete(id: list[index].id)}, update: {self.callbackUpdate(formCallback: list[index])}).id(list[index].id).border(Color.red, width: ((self.vo.allError.count > 0 && self.vo.allError[tab].count > 0 && self.vo.allError[tab].contains(index)) ? 1 : 0)).onTapGesture(count: 2) {
+                        HighVoltageInsulationRowDataView(form: list[index], delete: {self.callbackDelete(id: list[index].id)}, update: {self.callbackUpdate(formCallback: list[index])}, dropdown: {self.callbackDropdown(id: list[index].id)}).id(list[index].id).border(Color.red, width: ((self.vo.allError.count > 0 && self.vo.allError[tab].count > 0 && self.vo.allError[tab].contains(index)) ? 1 : 0)).onTapGesture(count: 2) {
                             self.callbackUpdate(formCallback: list[index])
                         }
                     }
                 }
             }
-        }.frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top).sheet(isPresented: $isDialog) {
-            DialogStore(store: {self.callbackStore(formCallback: self.form)}, form: self.$form, isAction: $isAction)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .sheet(item: $activeSheet, onDismiss: { activeSheet = nil }) { item in
+            switch item {
+            case .first:
+                Picker("", selection: $selectedDR.onChange(change)) {
+                    Text("0").tag("0")
+                    Text("1").tag("1")
+                    Text("2").tag("2")
+                    Text("3").tag("3")
+                }
+            case .second:
+                StoreDialog(store: {self.callbackStore(formCallback: self.form)}, form: self.$form, isAction: $isAction)
+            }
+        }
+    }
+    
+    func change(tag: String) {
+        self.activeSheet = nil
+        for item in list {
+            if (item.id == self.id) {
+                item.sokutei_hoho_koatsu_zetsuen_kb = tag
+            }
+        }
+    }
+    
+    func callbackDropdown(id: String) {
+        self.selectedDR = self.list.filter{ obj in return obj.id == id}.first!.sokutei_hoho_koatsu_zetsuen_kb
+        self.activeSheet = .first
+        self.id = id
     }
     
     func callbackDelete(id: String) {
@@ -127,13 +165,12 @@ struct HighVoltageInsulationFirstPageView: View {
     }
     
     func callbackUpdate(formCallback: DataForm) {
-        self.isDialog = true
         self.isAction = true
         self.form = formCallback
+        self.activeSheet = .second
     }
     
     func callbackStore(formCallback: DataForm) {
-        self.isDialog = false
         if self.isAction {
             var res = [DataForm]()
             for item in list {
@@ -147,9 +184,10 @@ struct HighVoltageInsulationFirstPageView: View {
         } else {
             self.list.append(formCallback)
         }
+        self.activeSheet = nil
     }
 }
-struct DialogStore: View {
+struct StoreDialog: View {
     var store: () -> Void
     @Binding public var form:DataForm
     @Binding public var isAction:Bool
@@ -167,7 +205,7 @@ struct DialogStore: View {
                         Button(action: {isSelectBox = true}) {
                             NameBtn(name: "空型文 >", fontSize: 20)
                         }.sheet(isPresented: $isSelectBox){
-                            Picker("", selection: $selected.onChange(colorChange)) {
+                            Picker("", selection: $selected.onChange(change)) {
                                 Text("One").tag(SelectBoxData.One)
                                 Text("Two").tag(SelectBoxData.Two)
                                 Text("Three").tag(SelectBoxData.Three)
@@ -198,17 +236,18 @@ struct DialogStore: View {
         }.padding([.top, .bottom], 10)
     }
     
-    func colorChange(_ tag: SelectBoxData) {
+    func change(_ tag: SelectBoxData) {
         self.isSelectBox = false
         self.form.sokutei_hani_em = tag.rawValue
     }
 }
 
-
 struct HighVoltageInsulationRowDataView: View {
     @State public var form: DataForm
+    @State var isDialog = false
     var delete: () -> Void
     var update: () -> Void
+    var dropdown: () -> Void
     var body: some View {
         HStack (spacing: 0){
             VStack{
@@ -243,8 +282,12 @@ struct HighVoltageInsulationRowDataView: View {
                             Text("測定方法")
                             Text(form.sokutei_hoho_koatsu_zetsuen_kb).foregroundColor(Color.gray)
                         }
-                        Text("測定").foregroundColor(Color.green)
-                        Text(">").foregroundColor(Color.gray).frame(maxHeight: .infinity)
+                        Button(action: {
+                            self.dropdown()
+                        }) {
+                            Text("E方式").foregroundColor(Color.green)
+                        }
+                        Text(">").foregroundColor(Color.gray)
                     }.padding(5).overlay(Divider(), alignment: .trailing)
                     
                     HStack{
@@ -252,7 +295,7 @@ struct HighVoltageInsulationRowDataView: View {
                             Text("測定値（ＭΩ）")
                             Text(form.sokuteichi_koatsu_zetsuen).foregroundColor(Color.gray)
                         }.frame(maxWidth: .infinity, alignment: .leading)
-                        Text("テキスト").foregroundColor(Color.gray).frame(maxHeight: .infinity)
+                        Text("テキスト").foregroundColor(Color.gray)
                     }.padding(5).overlay(Divider(), alignment: .trailing)
                     
                     HStack {
@@ -260,7 +303,7 @@ struct HighVoltageInsulationRowDataView: View {
                             Text("判定結果")
                             Text(form.hantei_kekka_koatsu_zetsuen_kb).foregroundColor(Color.gray)
                         }.frame(maxWidth: .infinity, alignment: .leading)
-                        Text("次へ").foregroundColor(Color.green)
+                        Text("良").foregroundColor(Color.green)
                         Text(">").foregroundColor(Color.gray).frame(maxHeight: .infinity)
                     }.padding(5)
                 }.frame(maxWidth: .infinity, maxHeight: 50, alignment: .leading)

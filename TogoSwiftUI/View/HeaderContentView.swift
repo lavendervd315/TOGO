@@ -30,6 +30,8 @@ struct HeaderContentView: View {
                         validate()
                         if self.vo.error.count == 0 {
                             realmStore()
+                        } else {
+                            tab = self.vo.error[0]
                         }
                     }) {
                         NameBtn(name: "確定")
@@ -41,8 +43,10 @@ struct HeaderContentView: View {
                 HStack(spacing: 0){
                     ForEach(0..<tabs.count) { index in
                         Button(action: {
-                            tab = index
-                            page = 1
+                            withAnimation {
+                                tab = index
+                                page = 1
+                            }
                         }) {
                             Text(tabs[index] + (self.vo.error.contains(index) ? "!" : "")).font(.system(size: 15)).padding([.top, .bottom], 15).padding([.leading, .trailing], 8).border(Color.blue).foregroundColor(self.vo.error.contains(index) ? Color.red : (self.tab == index ? Color.white : nil))
                         }.background(self.tab == index ? Color.blue : nil)
@@ -88,7 +92,7 @@ struct HeaderContentView: View {
         let realm = try! Realm()
         for item in list[0] {
             let model = TabOneDataModel()
-            model.id = item.hantei_kekka_koatsu_zetsuen_kb
+            model.id = item.id
             model.hantei_kekka_koatsu_zetsuen_kb = item.hantei_kekka_koatsu_zetsuen_kb
             model.sokutei_hani_em = item.sokutei_hani_em
             model.sokutei_hoho_koatsu_zetsuen_kb = item.sokutei_hoho_koatsu_zetsuen_kb
@@ -100,7 +104,7 @@ struct HeaderContentView: View {
         
         for item in list[1] {
             let model = TabTwoDataModel()
-            model.id = item.hantei_kekka_koatsu_zetsuen_kb
+            model.id = item.id
             model.hantei_kekka_koatsu_zetsuen_kb = item.hantei_kekka_koatsu_zetsuen_kb
             model.sokutei_hani_em = item.sokutei_hani_em
             model.sokutei_hoho_koatsu_zetsuen_kb = item.sokutei_hoho_koatsu_zetsuen_kb
@@ -112,7 +116,7 @@ struct HeaderContentView: View {
         
         for item in list[2] {
             let model = TabThreeDataModel()
-            model.id = item.hantei_kekka_koatsu_zetsuen_kb
+            model.id = item.id
             model.hantei_kekka_koatsu_zetsuen_kb = item.hantei_kekka_koatsu_zetsuen_kb
             model.sokutei_hani_em = item.sokutei_hani_em
             model.sokutei_hoho_koatsu_zetsuen_kb = item.sokutei_hoho_koatsu_zetsuen_kb
@@ -124,7 +128,7 @@ struct HeaderContentView: View {
         
         for item in list[3] {
             let model = TabFourDataModel()
-            model.id = item.hantei_kekka_koatsu_zetsuen_kb
+            model.id = item.id
             model.hantei_kekka_koatsu_zetsuen_kb = item.hantei_kekka_koatsu_zetsuen_kb
             model.sokutei_hani_em = item.sokutei_hani_em
             model.sokutei_hoho_koatsu_zetsuen_kb = item.sokutei_hoho_koatsu_zetsuen_kb
@@ -148,7 +152,7 @@ struct HeaderContentView: View {
         
         for item in list[5] {
             let model = TabSixDataModel()
-            model.id = item.hantei_kekka_koatsu_zetsuen_kb
+            model.id = item.id
             model.hantei_kekka_koatsu_zetsuen_kb = item.hantei_kekka_koatsu_zetsuen_kb
             model.sokutei_hani_em = item.sokutei_hani_em
             model.sokutei_hoho_koatsu_zetsuen_kb = item.sokutei_hoho_koatsu_zetsuen_kb
@@ -160,7 +164,7 @@ struct HeaderContentView: View {
         
         for item in list[6] {
             let model = TabSevenDataModel()
-            model.id = item.hantei_kekka_koatsu_zetsuen_kb
+            model.id = item.id
             model.hantei_kekka_koatsu_zetsuen_kb = item.hantei_kekka_koatsu_zetsuen_kb
             model.sokutei_hani_em = item.sokutei_hani_em
             model.sokutei_hoho_koatsu_zetsuen_kb = item.sokutei_hoho_koatsu_zetsuen_kb
@@ -172,7 +176,7 @@ struct HeaderContentView: View {
         
         for item in list[7] {
             let model = TabEightDataModel()
-            model.id = item.hantei_kekka_koatsu_zetsuen_kb
+            model.id = item.id
             model.hantei_kekka_koatsu_zetsuen_kb = item.hantei_kekka_koatsu_zetsuen_kb
             model.sokutei_hani_em = item.sokutei_hani_em
             model.sokutei_hoho_koatsu_zetsuen_kb = item.sokutei_hoho_koatsu_zetsuen_kb

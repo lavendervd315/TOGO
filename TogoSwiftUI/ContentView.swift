@@ -14,6 +14,20 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
+struct LoadingView : View {
+    @State private var showAction = false
+
+    var body: some View {
+        Image(systemName: "arrow.triangle.2.circlepath")
+            .font(.system(size: 29))
+            .rotationEffect(.degrees(self.showAction ? 360.0 : 0.0))
+            .animation(self.showAction ? Animation.linear(duration: 1.5).repeatForever(autoreverses: false) : nil)
+        .onAppear() {
+            self.showAction = true
+        }
+    }
+}
+
 struct ContentView: View {
     var body: some View {
         TabView {
